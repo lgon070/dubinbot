@@ -14,7 +14,7 @@ module.exports = (client) =>{
                 table.addRow(file, '✔')
             }
             else{
-                table.addRow(file, '❌ -> missing something??')
+                table.addRow(file, '❌')
                 continue
             }
 
