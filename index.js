@@ -1,79 +1,44 @@
-const Discord = require('discord.js')
-const bot =  new Discord.Client()
-let prefix = '~'
+const {Client, Collection} = require('discord.js');
+const config = require('./config.json');
 
-bot.on('ready', ()=>{
-    console.log("Connected as " + bot.user.tag)
-    bot.user.setActivity("You Sleep", {type: "WATCHING"})
+const client = new Client({
+    disabledEveryone: true
 })
 
-bot.on('message', (message)=>{
-    if(message.author == bot.user){
-        return
-    }
-    if(message.content.startsWith(prefix)){
-        processCommand(message)
+client.commands = new Collection();
+client.aliases = new Collection();
+
+['command'].forEach(handler=>{
+    require(`./handler/${handler}`)(client);
+})
+
+client.on('ready', ()=>{
+    console.log("Connected as " + client.user.tag);
+    client.user.setActivity("You Sleep", {type: "WATCHING"})
+})
+
+
+client.on('message', async message =>{
+    let prefix = '~'
+    if (message.author.bot) return;
+    if (!message.guild) return;
+    if (!message.content.startsWith(prefix)) return;
+    if (!message.member) message.member = await message.guild.fecthMember(message);
+   
+    const args = message.content.slice(prefix.length).trim().split(/ +/g);
+    const cmd = args.shift().toLowerCase();
+
+    if(cmd.length ==0) return;
+
+    let command  = client.commands.get(cmd);
+    if(!command) command = client.command.get(client.aliases.get(cmd));
+    if(command){
+        command.run(client, message, args)
     }
 })
 
-function processCommand(message){
-    let fullCommand = message.content.substr(1)
-    let splitCommand = fullCommand.split(' ')
-    let primaryCommand = splitCommand[0]
-    let arguments = splitCommand.slice(1)
 
-    if(primaryCommand == 'help'){
-        helpCommand(arguments, message)
-    }
-    if(primaryCommand == 'prefix'){
-        changePrefix(arguments, message)
-    }
-    if(primaryCommand == 'roll'){
-        rollDie(arguments, message)
-    }
-    if(primaryCommand == 'say'){
-        sayTheLine(arguments, message)
-    }
-}
-
-function helpCommand(arguments, message){
-    if(arguments.length == 0){
-        let msg = `Use [${prefix}] to summon Dubin! 
-        Current commands are:
-         ${prefix}help
-         ${prefix}roll
-         ${prefix}say`
-        msg = "```"+msg+"```"
-        message.reply(msg)
-    }
-}
-
-function changePrefix(arguments, message){
-    if(arguments.length == 0){
-        message.reply(`Prefix is ${prefix}`)
-    }
-    else{
-        prefix = arguments[0]
-        message.reply(`Prefix has been changed to ${prefix}`)
-    }
-}
-
-function rollDie(arguments, message){
-    let roll = Math.floor(Math.random() * 6) + 1
-    message.reply('rolled a ' + roll)
-}
-
-function sayTheLine(arguments, message){
-    let str = ''
-    for(let i = 0; i <arguments.length; i++){
-        str += arguments[i] + ' '
-    }
-
-    message.channel.send(str)
-}
-
-//Login key useless
-bot.login('Njg0MTMyOTIwNDU3MTY2ODU4.Xl1rQA.3u-LKXdLkNQMZJkTkdfca88wjDM');
+client.login(config.botToken);
 
 
 
