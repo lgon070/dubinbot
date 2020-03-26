@@ -72,6 +72,7 @@ function sayTheLine(arguments, message){
     message.channel.send(str)
 }
 
+//Login key useless
 bot.login('Njg0MTMyOTIwNDU3MTY2ODU4.Xl1rQA.3u-LKXdLkNQMZJkTkdfca88wjDM');
 
 
